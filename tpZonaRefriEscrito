@@ -1,0 +1,1284 @@
+Model 
+Cliente
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+
+import jakarta.persistence.*;
+import java.util.List;
+
+@Entity
+@Table(name = "clientes")
+public class Cliente {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_cliente")
+    private Integer idCliente;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Column(nullable = false)
+    private Integer telefono;
+
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
+    private List<Pedido> pedidos;
+
+    public Cliente() {
+    }
+
+    public Cliente(String nombre, String email, Integer telefono) {
+        this.nombre = nombre;
+        this.email = email;
+        this.telefono = telefono;
+    }
+
+    public Integer getIdCliente() {
+        return idCliente;
+    }
+
+    public void setIdCliente(Integer idCliente) {
+        this.idCliente = idCliente;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Integer getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(Integer telefono) {
+        this.telefono = telefono;
+    }
+
+    public List<Pedido> getPedidos() {
+        return pedidos;
+    }
+
+    public void setPedidos(List<Pedido> pedidos) {
+        this.pedidos = pedidos;
+    }
+}
+Pedido
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "pedidos")
+public class Pedido {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_pedido")
+    private Integer idPedido;
+
+    @ManyToOne
+    @JoinColumn(name = "id_cliente", nullable = false)
+    private Cliente cliente;
+
+    @Column(nullable = false)
+    private LocalDateTime fecha;
+
+    @Column(name = "estado_pago", nullable = false)
+    private String estadoPago;
+
+    @Column(name = "direccion_envio", nullable = false)
+    private String direccionEnvio;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PedidoDetalle> detalles = new ArrayList<>();
+
+    public Pedido() {
+    }
+
+    public Pedido(Cliente cliente, LocalDateTime fecha, String estadoPago, String direccionEnvio) {
+        this.cliente = cliente;
+        this.fecha = fecha;
+        this.estadoPago = estadoPago;
+        this.direccionEnvio = direccionEnvio;
+    }
+
+    public Integer getIdPedido() {
+        return idPedido;
+    }
+
+    public void setIdPedido(Integer idPedido) {
+        this.idPedido = idPedido;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
+    }
+
+    public LocalDateTime getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDateTime fecha) {
+        this.fecha = fecha;
+    }
+
+    public String getEstadoPago() {
+        return estadoPago;
+    }
+
+    public void setEstadoPago(String estadoPago) {
+        this.estadoPago = estadoPago;
+    }
+
+    public String getDireccionEnvio() {
+        return direccionEnvio;
+    }
+
+    public void setDireccionEnvio(String direccionEnvio) {
+        this.direccionEnvio = direccionEnvio;
+    }
+
+    public List<PedidoDetalle> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(List<PedidoDetalle> detalles) {
+        this.detalles = detalles;
+    }
+}
+PedidoDetalle
+
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+
+@Entity
+@Table(name = "pedido_detalle")
+@Access(AccessType.FIELD)
+public class PedidoDetalle {
+
+    @EmbeddedId
+    private PedidoDetalleId id = new PedidoDetalleId();
+
+    @ManyToOne
+    @MapsId("pedidoId")
+    @JoinColumn(name = "id_pedido")
+    private Pedido pedido;
+
+    @ManyToOne
+    @MapsId("productoId")
+    @JoinColumn(name = "id_producto")
+    private Producto producto;
+
+    @Column(name = "cantidad", nullable = false)
+    private Integer cantidad;
+
+    @Column(name = "precio_unitario", nullable = false, precision = 38, scale = 2)
+    private BigDecimal precioUnitario;
+
+    public PedidoDetalle() {
+    }
+
+    public PedidoDetalle(Pedido pedido, Producto producto, Integer cantidad, BigDecimal precioUnitario) {
+        this.pedido = pedido;
+        this.producto = producto;
+        this.cantidad = cantidad;
+        this.precioUnitario = precioUnitario;
+        // No seteamos id manualmente; MapsId lo resuelve
+    }
+
+    public PedidoDetalleId getId() {
+        return id;
+    }
+
+    public void setId(PedidoDetalleId id) {
+        this.id = id;
+    }
+
+    public Pedido getPedido() {
+        return pedido;
+    }
+
+    public void setPedido(Pedido pedido) {
+        this.pedido = pedido;
+    }
+
+    public Producto getProducto() {
+        return producto;
+    }
+
+    public void setProducto(Producto producto) {
+        this.producto = producto;
+    }
+
+    public Integer getCantidad() {
+        return cantidad;
+    }
+
+    public void setCantidad(Integer cantidad) {
+        this.cantidad = cantidad;
+    }
+
+    public BigDecimal getPrecioUnitario() {
+        return precioUnitario;
+    }
+
+    public void setPrecioUnitario(BigDecimal precioUnitario) {
+        this.precioUnitario = precioUnitario;
+    }
+
+    public BigDecimal getSubtotal() {
+        return precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+    }
+}
+PedidoDetalleId
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import java.io.Serializable;
+import java.util.Objects;
+
+@Embeddable
+@Access(AccessType.FIELD)
+public class PedidoDetalleId implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Column(name = "id_producto", columnDefinition = "INT")
+    private Integer productoId;
+
+    @Column(name = "id_pedido", columnDefinition = "INT")
+    private Integer pedidoId;
+
+    public PedidoDetalleId() {
+    }
+
+    public PedidoDetalleId(Integer pedidoId, Integer productoId) {
+        this.pedidoId = pedidoId;
+        this.productoId = productoId;
+    }
+
+    public Integer getPedidoId() {
+        return pedidoId;
+    }
+
+    public void setPedidoId(Integer pedidoId) {
+        this.pedidoId = pedidoId;
+    }
+
+    public Integer getProductoId() {
+        return productoId;
+    }
+
+    public void setProductoId(Integer productoId) {
+        this.productoId = productoId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof PedidoDetalleId))
+            return false;
+        PedidoDetalleId that = (PedidoDetalleId) o;
+        return Objects.equals(pedidoId, that.pedidoId) &&
+                Objects.equals(productoId, that.productoId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pedidoId, productoId);
+    }
+}
+Producto
+// src/main/java/ar/edu/centro8/daw/trabajo_integrador_gilma_aguada/model/Producto.java
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Entity
+@Table(name = "productos")
+public class Producto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_producto")
+    private Integer idProducto;
+
+    @Column(nullable = false)
+    private String nombre;
+
+    @Column(nullable = false, precision = 38, scale = 2)
+    private BigDecimal precio;
+
+    @Column(nullable = false)
+    private Integer stock;
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL)
+    private List<PedidoDetalle> pedidoDetalles;
+
+    public Producto() {
+    }
+
+    public Producto(String nombre, BigDecimal precio, Integer stock) {
+        this.nombre = nombre;
+        this.precio = precio;
+        this.stock = stock;
+    }
+
+    public Integer getIdProducto() {
+        return idProducto;
+    }
+
+    public void setIdProducto(Integer idProducto) {
+        this.idProducto = idProducto;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public BigDecimal getPrecio() {
+        return precio;
+    }
+
+    public void setPrecio(BigDecimal precio) {
+        this.precio = precio;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
+    }
+
+    public List<PedidoDetalle> getPedidoDetalles() {
+        return pedidoDetalles;
+    }
+
+    public void setPedidoDetalles(List<PedidoDetalle> pedidoDetalles) {
+        this.pedidoDetalles = pedidoDetalles;
+    }
+}
+Controller
+Clinete 
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.ClienteService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/clientes")
+@CrossOrigin(origins = "*")
+public class ClienteController {
+
+    @Autowired
+    private ClienteService clienteService;
+
+    @PostMapping
+    public ResponseEntity<Cliente> crear(@RequestBody Cliente cliente) {
+        Cliente nuevoCliente = clienteService.crear(cliente);
+        return new ResponseEntity<>(nuevoCliente, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Cliente>> obtenerTodos() {
+        List<Cliente> clientes = clienteService.obtenerTodos();
+        return ResponseEntity.ok(clientes);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Cliente> obtenerPorId(@PathVariable Integer id) {
+        Cliente cliente = clienteService.obtenerPorId(id);
+        return ResponseEntity.ok(cliente);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Cliente> actualizar(@PathVariable Integer id, @RequestBody Cliente cliente) {
+        Cliente clienteActualizado = clienteService.actualizar(id, cliente);
+        return ResponseEntity.ok(clienteActualizado);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        clienteService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/buscar")
+    public ResponseEntity<List<Cliente>> buscarPorNombre(@RequestParam String nombre) {
+        List<Cliente> clientes = clienteService.buscarPorNombre(nombre);
+        return ResponseEntity.ok(clientes);
+    }
+
+    @GetMapping("/email/{email}")
+    public ResponseEntity<Cliente> buscarPorEmail(@PathVariable String email) {
+        Optional<Cliente> cliente = clienteService.buscarPorEmail(email);
+        return cliente.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+}
+PedidoController
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.PedidoDetalle;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.PedidoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/pedidos")
+@CrossOrigin(origins = "*")
+public class PedidoController {
+
+    @Autowired
+    private PedidoService pedidoService;
+
+    @PostMapping
+    public ResponseEntity<Pedido> crear(@RequestBody Pedido pedido) {
+        Pedido nuevoPedido = pedidoService.crear(pedido);
+        return new ResponseEntity<>(nuevoPedido, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Pedido>> obtenerTodos() {
+        List<Pedido> pedidos = pedidoService.obtenerTodos();
+        return ResponseEntity.ok(pedidos);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Pedido> obtenerPorId(@PathVariable Integer id) {
+        Pedido pedido = pedidoService.obtenerPorId(id);
+        return ResponseEntity.ok(pedido);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Pedido> actualizar(@PathVariable Integer id, @RequestBody Pedido pedido) {
+        Pedido pedidoActualizado = pedidoService.actualizar(id, pedido);
+        return ResponseEntity.ok(pedidoActualizado);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        pedidoService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/detalles")
+    public ResponseEntity<PedidoDetalle> agregarDetalle(@PathVariable Integer id, @RequestBody PedidoDetalle detalle) {
+        PedidoDetalle nuevoDetalle = pedidoService.agregarDetalle(id, detalle);
+        return new ResponseEntity<>(nuevoDetalle, HttpStatus.CREATED);
+    }
+
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<Pedido> actualizarEstado(@PathVariable Integer id, @RequestBody Map<String, String> body) {
+        String nuevoEstado = body.get("estadoPago");
+        Pedido pedidoActualizado = pedidoService.actualizarEstadoPago(id, nuevoEstado);
+        return ResponseEntity.ok(pedidoActualizado);
+    }
+
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<List<Pedido>> obtenerPorCliente(@PathVariable Integer clienteId) {
+        List<Pedido> pedidos = pedidoService.obtenerPorCliente(clienteId);
+        return ResponseEntity.ok(pedidos);
+    }
+
+    @GetMapping("/pendientes")
+    public ResponseEntity<List<Pedido>> obtenerPendientes() {
+        List<Pedido> pedidos = pedidoService.obtenerPendientes();
+        return ResponseEntity.ok(pedidos);
+    }
+
+    @GetMapping("/{id}/total")
+    public ResponseEntity<Map<String, BigDecimal>> calcularTotal(@PathVariable Integer id) {
+        BigDecimal total = pedidoService.calcularTotal(id);
+        Map<String, BigDecimal> response = new HashMap<>();
+        response.put("total", total);
+        return ResponseEntity.ok(response);
+    }
+}
+GlobalExceptionHandler
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.ResourceNotFoundException;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.BusinessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.NOT_FOUND.value());
+        error.put("error", "Recurso no encontrado");
+        error.put("message", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.BAD_REQUEST.value());
+        error.put("error", "Error de validación");
+        error.put("message", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        error.put("error", "Error interno del servidor");
+        error.put("message", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+ProductoController
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.ProductoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/productos")
+@CrossOrigin(origins = "*")
+public class ProductoController {
+
+    @Autowired
+    private ProductoService productoService;
+
+    @PostMapping
+    public ResponseEntity<Producto> crear(@RequestBody Producto producto) {
+        Producto nuevoProducto = productoService.crear(producto);
+        return new ResponseEntity<>(nuevoProducto, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Producto>> obtenerTodos() {
+        List<Producto> productos = productoService.obtenerTodos();
+        return ResponseEntity.ok(productos);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Producto> obtenerPorId(@PathVariable Integer id) {
+        Producto producto = productoService.obtenerPorId(id);
+        return ResponseEntity.ok(producto);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Producto> actualizar(@PathVariable Integer id, @RequestBody Producto producto) {
+        Producto productoActualizado = productoService.actualizar(id, producto);
+        return ResponseEntity.ok(productoActualizado);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        productoService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/buscar")
+    public ResponseEntity<List<Producto>> buscarPorNombre(@RequestParam String nombre) {
+        List<Producto> productos = productoService.buscarPorNombre(nombre);
+        return ResponseEntity.ok(productos);
+    }
+
+    @GetMapping("/con-stock")
+    public ResponseEntity<List<Producto>> obtenerConStock() {
+        List<Producto> productos = productoService.obtenerConStock();
+        return ResponseEntity.ok(productos);
+    }
+
+    @GetMapping("/bajo-stock")
+    public ResponseEntity<List<Producto>> obtenerConBajoStock() {
+        List<Producto> productos = productoService.obtenerProductosConBajoStock();
+        return ResponseEntity.ok(productos);
+    }
+}
+ThymeleafController
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.ClienteService;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.ProductoService;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.PedidoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import java.util.List;
+
+@Controller
+@RequestMapping("/thymeleaf")
+public class ThymeleafController {
+
+    @Autowired
+    private ClienteService clienteService;
+
+    @Autowired
+    private ProductoService productoService;
+
+    @Autowired
+    private PedidoService pedidoService;
+
+    @GetMapping
+    public String dashboard(Model model) {
+        List<Cliente> clientes = clienteService.obtenerTodos();
+        List<Producto> productos = productoService.obtenerTodos();
+        List<Pedido> pedidos = pedidoService.obtenerTodos();
+        List<Pedido> pedidosPendientes = pedidoService.obtenerPendientes();
+        List<Producto> productosBajoStock = productoService.obtenerProductosConBajoStock();
+
+        model.addAttribute("clientes", clientes);
+        model.addAttribute("productos", productos);
+        model.addAttribute("pedidos", pedidos);
+        model.addAttribute("pedidosPendientes", pedidosPendientes);
+        model.addAttribute("productosBajoStock", productosBajoStock);
+
+        model.addAttribute("totalClientes", clientes.size());
+        model.addAttribute("totalProductos", productos.size());
+        model.addAttribute("totalPedidos", pedidos.size());
+        model.addAttribute("cantidadPendientes", pedidosPendientes.size());
+
+        return "dashboard";
+    }
+}
+Exception
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception;
+
+public class BusinessException extends RuntimeException {
+    public BusinessException(String message) {
+        super(message);
+    }
+}
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+
+Repositories
+Cliente repository
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+
+public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
+    List<Cliente> findByNombreContainingIgnoreCase(String nombre);
+
+    Optional<Cliente> findByEmail(String email);
+
+    Optional<Cliente> findByTelefono(Integer telefono);
+}
+PedidoDetalleRepository
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.PedidoDetalle;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.PedidoDetalleId;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.math.BigDecimal;
+import java.util.List;
+
+public interface PedidoDetalleRepository extends JpaRepository<PedidoDetalle, PedidoDetalleId> {
+    List<PedidoDetalle> findByPedido(Pedido pedido);
+
+    List<PedidoDetalle> findByProducto(Producto producto);
+
+    @Query("SELECT COALESCE(SUM(pd.precioUnitario * pd.cantidad), 0) FROM PedidoDetalle pd WHERE pd.pedido.idPedido = :pedidoId")
+    BigDecimal calcularTotalPedido(@Param("pedidoId") Integer pedidoId);
+}
+PedidoRepository
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
+    List<Pedido> findByCliente(Cliente cliente);
+
+    List<Pedido> findByEstadoPago(String estadoPago);
+
+    List<Pedido> findByFechaBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
+
+    @Query("SELECT p FROM Pedido p WHERE p.estadoPago = 'Pendiente' ORDER BY p.fecha DESC")
+    List<Pedido> findPedidosPendientes();
+
+    @Query("SELECT p FROM Pedido p WHERE p.cliente.idCliente = :clienteId ORDER BY p.fecha DESC")
+    List<Pedido> findPedidosByClienteId(@Param("clienteId") Integer clienteId);
+}
+ProductoRepository
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Repository
+public interface ProductoRepository extends JpaRepository<Producto, Integer> {
+    List<Producto> findByNombreContainingIgnoreCase(String nombre);
+
+    List<Producto> findByStockGreaterThan(Integer stock);
+
+    List<Producto> findByPrecioBetween(BigDecimal precioMin, BigDecimal precioMax);
+
+    @Query("SELECT p FROM Producto p WHERE p.stock < 10")
+    List<Producto> findProductosConBajoStock();
+}
+Service
+ClienteService
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories.ClienteRepository;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.ResourceNotFoundException;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.BusinessException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Transactional
+public class ClienteService {
+
+    @Autowired
+    private ClienteRepository clienteRepository;
+
+    public List<Cliente> obtenerTodos() {
+        return clienteRepository.findAll();
+    }
+
+    public Cliente obtenerPorId(Integer id) {
+        return clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + id));
+    }
+
+    public Cliente crear(Cliente cliente) {
+        Optional<Cliente> existente = clienteRepository.findByEmail(cliente.getEmail());
+        if (existente.isPresent()) {
+            throw new BusinessException("Ya existe un cliente registrado con el email: " + cliente.getEmail());
+        }
+
+        if (cliente.getTelefono() == null) {
+            throw new BusinessException("El teléfono es obligatorio");
+        }
+
+        if (cliente.getNombre() == null || cliente.getNombre().trim().isEmpty()) {
+            throw new BusinessException("El nombre es obligatorio");
+        }
+
+        return clienteRepository.save(cliente);
+    }
+
+    public Cliente actualizar(Integer id, Cliente clienteActualizado) {
+        Cliente clienteExistente = obtenerPorId(id);
+
+        if (!clienteExistente.getEmail().equals(clienteActualizado.getEmail())) {
+            Optional<Cliente> clienteConMismoEmail = clienteRepository.findByEmail(clienteActualizado.getEmail());
+            if (clienteConMismoEmail.isPresent() && !clienteConMismoEmail.get().getIdCliente().equals(id)) {
+                throw new BusinessException("El email ya está registrado por otro cliente");
+            }
+        }
+
+        clienteExistente.setNombre(clienteActualizado.getNombre());
+        clienteExistente.setEmail(clienteActualizado.getEmail());
+        clienteExistente.setTelefono(clienteActualizado.getTelefono());
+
+        return clienteRepository.save(clienteExistente);
+    }
+
+    public void eliminar(Integer id) {
+        Cliente cliente = obtenerPorId(id);
+        clienteRepository.delete(cliente);
+    }
+
+    public List<Cliente> buscarPorNombre(String nombre) {
+        return clienteRepository.findByNombreContainingIgnoreCase(nombre);
+    }
+
+    public Optional<Cliente> buscarPorEmail(String email) {
+        return clienteRepository.findByEmail(email);
+    }
+}
+PedidoService
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.PedidoDetalle;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories.PedidoDetalleRepository;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories.PedidoRepository;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.ResourceNotFoundException;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.BusinessException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@Transactional
+public class PedidoService {
+
+    @Autowired
+    private PedidoRepository pedidoRepository;
+
+    @Autowired
+    private PedidoDetalleRepository pedidoDetalleRepository;
+
+    @Autowired
+    private ProductoService productoService;
+
+    @Autowired
+    private ClienteService clienteService;
+
+    public List<Pedido> obtenerTodos() {
+        return pedidoRepository.findAll();
+    }
+
+    public Pedido obtenerPorId(Integer id) {
+        return pedidoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con id: " + id));
+    }
+
+    public Pedido crear(Pedido pedido) {
+        if (pedido.getCliente() == null || pedido.getCliente().getIdCliente() == null) {
+            throw new BusinessException("Debe especificar un cliente para el pedido");
+        }
+
+        Cliente cliente = clienteService.obtenerPorId(pedido.getCliente().getIdCliente());
+        pedido.setCliente(cliente);
+
+        if (pedido.getFecha() == null) {
+            pedido.setFecha(LocalDateTime.now());
+        }
+
+        if (pedido.getEstadoPago() == null || pedido.getEstadoPago().trim().isEmpty()) {
+            pedido.setEstadoPago("Pendiente");
+        }
+
+        if (pedido.getDireccionEnvio() == null || pedido.getDireccionEnvio().trim().isEmpty()) {
+            throw new BusinessException("La dirección de envío es obligatoria");
+        }
+
+        Pedido pedidoGuardado = pedidoRepository.save(pedido);
+
+        if (pedido.getDetalles() != null && !pedido.getDetalles().isEmpty()) {
+            for (PedidoDetalle detalle : pedido.getDetalles()) {
+                agregarDetalle(pedidoGuardado.getIdPedido(), detalle);
+            }
+        }
+
+        return obtenerPorId(pedidoGuardado.getIdPedido());
+    }
+
+    public PedidoDetalle agregarDetalle(Integer pedidoId, PedidoDetalle detalle) {
+        Pedido pedido = obtenerPorId(pedidoId);
+
+        if (detalle.getProducto() == null || detalle.getProducto().getIdProducto() == null) {
+            throw new BusinessException("Debe especificar un producto válido");
+        }
+
+        Producto producto = productoService.obtenerPorId(detalle.getProducto().getIdProducto());
+
+        if (!productoService.verificarDisponibilidad(producto.getIdProducto(), detalle.getCantidad())) {
+            throw new BusinessException("Stock insuficiente para el producto: " + producto.getNombre());
+        }
+
+        if (detalle.getPrecioUnitario() == null) {
+            detalle.setPrecioUnitario(producto.getPrecio());
+        }
+
+        detalle.setPedido(pedido);
+        detalle.setProducto(producto);
+
+        productoService.reducirStock(producto.getIdProducto(), detalle.getCantidad());
+
+        return pedidoDetalleRepository.save(detalle);
+    }
+
+    public Pedido actualizarEstadoPago(Integer id, String nuevoEstado) {
+        Pedido pedido = obtenerPorId(id);
+
+        List<String> estadosPermitidos = List.of("Pendiente", "Pagado", "Cancelado");
+        if (!estadosPermitidos.contains(nuevoEstado)) {
+            throw new BusinessException("Estado de pago no válido. Valores permitidos: " + estadosPermitidos);
+        }
+
+        pedido.setEstadoPago(nuevoEstado);
+        return pedidoRepository.save(pedido);
+    }
+
+    public Pedido actualizar(Integer id, Pedido pedidoActualizado) {
+        Pedido pedidoExistente = obtenerPorId(id);
+
+        pedidoExistente.setDireccionEnvio(pedidoActualizado.getDireccionEnvio());
+        pedidoExistente.setEstadoPago(pedidoActualizado.getEstadoPago());
+
+        return pedidoRepository.save(pedidoExistente);
+    }
+
+    public void eliminar(Integer id) {
+        Pedido pedido = obtenerPorId(id);
+        pedidoRepository.delete(pedido);
+    }
+
+    public List<Pedido> obtenerPorCliente(Integer clienteId) {
+        return pedidoRepository.findPedidosByClienteId(clienteId);
+    }
+
+    public List<Pedido> obtenerPorEstado(String estado) {
+        return pedidoRepository.findByEstadoPago(estado);
+    }
+
+    public List<Pedido> obtenerPendientes() {
+        return pedidoRepository.findPedidosPendientes();
+    }
+
+    public BigDecimal calcularTotal(Integer pedidoId) {
+        BigDecimal total = pedidoDetalleRepository.calcularTotalPedido(pedidoId);
+        return total != null ? total : BigDecimal.ZERO;
+    }
+}
+ProductoService
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories.ProductoRepository;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.ResourceNotFoundException;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.BusinessException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Service
+@Transactional
+public class ProductoService {
+
+    @Autowired
+    private ProductoRepository productoRepository;
+
+    public List<Producto> obtenerTodos() {
+        return productoRepository.findAll();
+    }
+
+    public Producto obtenerPorId(Integer id) {
+        return productoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
+    }
+
+    public Producto crear(Producto producto) {
+        validarProducto(producto);
+        return productoRepository.save(producto);
+    }
+
+    public Producto actualizar(Integer id, Producto productoActualizado) {
+        Producto productoExistente = obtenerPorId(id);
+        validarProducto(productoActualizado);
+
+        productoExistente.setNombre(productoActualizado.getNombre());
+        productoExistente.setPrecio(productoActualizado.getPrecio());
+        productoExistente.setStock(productoActualizado.getStock());
+
+        return productoRepository.save(productoExistente);
+    }
+
+    private void validarProducto(Producto producto) {
+        if (producto.getPrecio() == null || producto.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("El precio debe ser mayor a 0");
+        }
+        if (producto.getStock() == null || producto.getStock() < 0) {
+            throw new BusinessException("El stock no puede ser negativo");
+        }
+        if (producto.getNombre() == null || producto.getNombre().trim().isEmpty()) {
+            throw new BusinessException("El nombre del producto es obligatorio");
+        }
+    }
+
+    public boolean verificarDisponibilidad(Integer productoId, Integer cantidadSolicitada) {
+        Producto producto = obtenerPorId(productoId);
+        return producto.getStock() >= cantidadSolicitada;
+    }
+
+    public void reducirStock(Integer productoId, Integer cantidad) {
+        Producto producto = obtenerPorId(productoId);
+
+        if (producto.getStock() < cantidad) {
+            throw new BusinessException("Stock insuficiente para el producto: " + producto.getNombre());
+        }
+
+        producto.setStock(producto.getStock() - cantidad);
+        productoRepository.save(producto);
+    }
+
+    public void eliminar(Integer id) {
+        Producto producto = obtenerPorId(id);
+        productoRepository.delete(producto);
+    }
+
+    public List<Producto> buscarPorNombre(String nombre) {
+        return productoRepository.findByNombreContainingIgnoreCase(nombre);
+    }
+
+    public List<Producto> obtenerConStock() {
+        return productoRepository.findByStockGreaterThan(0);
+    }
+
+    public List<Producto> obtenerProductosConBajoStock() {
+        return productoRepository.findProductosConBajoStock();
+    }
+}
+
+pom.xml Viejo
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/>
+    </parent>
+    
+    <groupId>ar.edu.centro8.daw</groupId>
+    <artifactId>trabajo-integrador-gilma-aguada</artifactId>
+    <version>1.0.0</version>
+    <name>Trabajo Integrador - Casa de Reparación</name>
+    <description>Sistema de gestión para casa de reparación de electrodomésticos</description>
+    
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+    
+    <dependencies>
+        <!-- Spring Boot Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        
+        <!-- Spring Boot Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        
+        <!-- Thymeleaf -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        
+       <!-- MySQL Connector -->
+      <dependency>
+           <groupId>com.mysql</groupId>
+           <artifactId>mysql-connector-j</artifactId>
+      <version>8.0.33</version>
+      </dependency>
+       
+        <!-- Spring Boot DevTools -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- Spring Boot Starter Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+ pom. xml con jdk 23
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/>
+    </parent>
+    
+    <groupId>ar.edu.centro8.daw</groupId>
+    <artifactId>trabajo-integrador-gilma-aguada</artifactId>
+    <version>1.0.0</version>
+    <name>Trabajo Integrador - Casa de Reparación</name>
+    <description>Sistema de gestión para casa de reparación de electrodomésticos</description>
+    
+    <!-- Configuración para Java 23 -->
+    <properties>
+        <java.version>23</java.version>
+        <maven.compiler.source>23</maven.compiler.source>
+        <maven.compiler.target>23</maven.compiler.target>
+    </properties>
+    
+    <dependencies>
+        <!-- Spring Boot Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        
+        <!-- Spring Boot Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        
+        <!-- Thymeleaf -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        
+        <!-- MySQL Connector -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.0.33</version>
+        </dependency>
+       
+        <!-- Spring Boot DevTools -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- Spring Boot Starter Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <!-- Plugin de Spring Boot -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            
+            <!-- Plugin de compilador para Java 23 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>23</source>
+                    <target>23</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
