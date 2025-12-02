@@ -1,0 +1,1446 @@
+Model 
+Cliente
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import java.util.List;
+
+/**
+ * Entidad Cliente
+ * Representa un cliente del sistema de reparación de electrodomésticos
+ */
+@Entity
+@Table(name = "clientes")
+public class Cliente {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_cliente")
+    private Integer idCliente;
+
+    @Column(nullable = false)
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(min = 3, max = 50, message = "El nombre debe tener entre 3 y 50 caracteres")
+    private String nombre;
+
+    @Column(unique = true, nullable = false)
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El email debe ser válido")
+    private String email;
+
+    @Column(nullable = false)
+    @NotNull(message = "El teléfono es obligatorio")
+    @Min(value = 1000000, message = "El teléfono debe tener al menos 7 dígitos")
+    @Max(value = 999999999, message = "El teléfono no debe exceder 9 dígitos")
+    private Integer telefono;
+
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
+    private List<Pedido> pedidos;
+
+    public Cliente() {
+    }
+
+    public Cliente(String nombre, String email, Integer telefono) {
+        this.nombre = nombre;
+        this.email = email;
+        this.telefono = telefono;
+    }
+
+    public Integer getIdCliente() {
+        return idCliente;
+    }
+
+    public void setIdCliente(Integer idCliente) {
+        this.idCliente = idCliente;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public Integer getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(Integer telefono) {
+        this.telefono = telefono;
+    }
+
+    public List<Pedido> getPedidos() {
+        return pedidos;
+    }
+
+    public void setPedidos(List<Pedido> pedidos) {
+        this.pedidos = pedidos;
+    }
+}
+Pedido
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Entidad Pedido
+ * Representa un pedido realizado por un cliente en el sistema de reparación
+ */
+@Entity
+@Table(name = "pedidos")
+public class Pedido {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_pedido")
+    private Integer idPedido;
+
+    @ManyToOne
+    @JoinColumn(name = "id_cliente", nullable = false)
+    @NotNull(message = "El cliente es obligatorio")
+    private Cliente cliente;
+
+    @Column(nullable = false)
+    @NotNull(message = "La fecha es obligatoria")
+    private LocalDateTime fecha;
+
+    @Column(name = "estado_pago", nullable = false)
+    @NotBlank(message = "El estado de pago es obligatorio")
+    @Pattern(regexp = "PENDIENTE|PAGADO|CANCELADO", message = "El estado de pago debe ser PENDIENTE, PAGADO o CANCELADO")
+    private String estadoPago;
+
+    @Column(name = "direccion_envio", nullable = false)
+    @NotBlank(message = "La dirección de envío es obligatoria")
+    @Size(min = 5, max = 200, message = "La dirección debe tener entre 5 y 200 caracteres")
+    private String direccionEnvio;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PedidoDetalle> detalles = new ArrayList<>();
+
+    public Pedido() {
+    }
+
+    public Pedido(Cliente cliente, LocalDateTime fecha, String estadoPago, String direccionEnvio) {
+        this.cliente = cliente;
+        this.fecha = fecha;
+        this.estadoPago = estadoPago;
+        this.direccionEnvio = direccionEnvio;
+    }
+
+    public Integer getIdPedido() {
+        return idPedido;
+    }
+
+    public void setIdPedido(Integer idPedido) {
+        this.idPedido = idPedido;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
+    }
+
+    public LocalDateTime getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDateTime fecha) {
+        this.fecha = fecha;
+    }
+
+    public String getEstadoPago() {
+        return estadoPago;
+    }
+
+    public void setEstadoPago(String estadoPago) {
+        this.estadoPago = estadoPago;
+    }
+
+    public String getDireccionEnvio() {
+        return direccionEnvio;
+    }
+
+    public void setDireccionEnvio(String direccionEnvio) {
+        this.direccionEnvio = direccionEnvio;
+    }
+
+    public List<PedidoDetalle> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(List<PedidoDetalle> detalles) {
+        this.detalles = detalles;
+    }
+}
+PedidoDetalle
+
+
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+
+/**
+ * Entidad PedidoDetalle
+ * Representa el detalle de cada línea de un pedido (producto, cantidad, precio)
+ */
+@Entity
+@Table(name = "pedido_detalle")
+@Access(AccessType.FIELD)
+public class PedidoDetalle {
+
+    @EmbeddedId
+    private PedidoDetalleId id = new PedidoDetalleId();
+
+    @ManyToOne
+    @MapsId("pedidoId")
+    @JoinColumn(name = "id_pedido")
+    @NotNull(message = "El pedido es obligatorio")
+    private Pedido pedido;
+
+    @ManyToOne
+    @MapsId("productoId")
+    @JoinColumn(name = "id_producto")
+    @NotNull(message = "El producto es obligatorio")
+    private Producto producto;
+
+    @Column(name = "cantidad", nullable = false)
+    @NotNull(message = "La cantidad es obligatoria")
+    @Min(value = 1, message = "La cantidad debe ser al menos 1")
+    @Max(value = 999, message = "La cantidad no puede exceder 999")
+    private Integer cantidad;
+
+    @Column(name = "precio_unitario", nullable = false, precision = 38, scale = 2)
+    @NotNull(message = "El precio unitario es obligatorio")
+    @DecimalMin(value = "0.01", message = "El precio unitario debe ser mayor a 0")
+    @DecimalMax(value = "1000000", message = "El precio unitario no puede exceder 1.000.000")
+    private BigDecimal precioUnitario;
+
+    public PedidoDetalle() {
+    }
+
+    public PedidoDetalle(Pedido pedido, Producto producto, Integer cantidad, BigDecimal precioUnitario) {
+        this.pedido = pedido;
+        this.producto = producto;
+        this.cantidad = cantidad;
+        this.precioUnitario = precioUnitario;
+        // No seteamos id manualmente; MapsId lo resuelve
+    }
+
+    public PedidoDetalleId getId() {
+        return id;
+    }
+
+    public void setId(PedidoDetalleId id) {
+        this.id = id;
+    }
+
+    public Pedido getPedido() {
+        return pedido;
+    }
+
+    public void setPedido(Pedido pedido) {
+        this.pedido = pedido;
+    }
+
+    public Producto getProducto() {
+        return producto;
+    }
+
+    public void setProducto(Producto producto) {
+        this.producto = producto;
+    }
+
+    public Integer getCantidad() {
+        return cantidad;
+    }
+
+    public void setCantidad(Integer cantidad) {
+        this.cantidad = cantidad;
+    }
+
+    public BigDecimal getPrecioUnitario() {
+        return precioUnitario;
+    }
+
+    public void setPrecioUnitario(BigDecimal precioUnitario) {
+        this.precioUnitario = precioUnitario;
+    }
+
+    public BigDecimal getSubtotal() {
+        return precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+    }
+}
+PedidoDetalleId
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import java.io.Serializable;
+import java.util.Objects;
+
+@Embeddable
+@Access(AccessType.FIELD)
+public class PedidoDetalleId implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Column(name = "id_producto", columnDefinition = "INT")
+    private Integer productoId;
+
+    @Column(name = "id_pedido", columnDefinition = "INT")
+    private Integer pedidoId;
+
+    public PedidoDetalleId() {
+    }
+
+    public PedidoDetalleId(Integer pedidoId, Integer productoId) {
+        this.pedidoId = pedidoId;
+        this.productoId = productoId;
+    }
+
+    public Integer getPedidoId() {
+        return pedidoId;
+    }
+
+    public void setPedidoId(Integer pedidoId) {
+        this.pedidoId = pedidoId;
+    }
+
+    public Integer getProductoId() {
+        return productoId;
+    }
+
+    public void setProductoId(Integer productoId) {
+        this.productoId = productoId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (!(o instanceof PedidoDetalleId))
+            return false;
+        PedidoDetalleId that = (PedidoDetalleId) o;
+        return Objects.equals(pedidoId, that.pedidoId) &&
+                Objects.equals(productoId, that.productoId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pedidoId, productoId);
+    }
+}
+Producto
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+import java.util.List;
+
+/**
+ * Entidad Producto
+ * Representa un producto disponible en el sistema de reparación
+ */
+@Entity
+@Table(name = "productos")
+public class Producto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_producto")
+    private Integer idProducto;
+
+    @Column(nullable = false)
+    @NotBlank(message = "El nombre del producto es obligatorio")
+    @Size(min = 3, max = 100, message = "El nombre debe tener entre 3 y 100 caracteres")
+    private String nombre;
+
+    @Column(nullable = false, precision = 38, scale = 2)
+    @NotNull(message = "El precio es obligatorio")
+    @DecimalMin(value = "0.01", message = "El precio debe ser mayor a 0")
+    @DecimalMax(value = "1000000", message = "El precio no puede exceder 1.000.000")
+    private BigDecimal precio;
+
+    @Column(nullable = false)
+    @NotNull(message = "El stock es obligatorio")
+    @Min(value = 0, message = "El stock no puede ser negativo")
+    @Max(value = 999999, message = "El stock no puede exceder 999.999")
+    private Integer stock;
+
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL)
+    private List<PedidoDetalle> pedidoDetalles;
+
+    public Producto() {
+    }
+
+    public Producto(String nombre, BigDecimal precio, Integer stock) {
+        this.nombre = nombre;
+        this.precio = precio;
+        this.stock = stock;
+    }
+
+    public Integer getIdProducto() {
+        return idProducto;
+    }
+
+    public void setIdProducto(Integer idProducto) {
+        this.idProducto = idProducto;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public BigDecimal getPrecio() {
+        return precio;
+    }
+
+    public void setPrecio(BigDecimal precio) {
+        this.precio = precio;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
+    }
+
+    public List<PedidoDetalle> getPedidoDetalles() {
+        return pedidoDetalles;
+    }
+
+    public void setPedidoDetalles(List<PedidoDetalle> pedidoDetalles) {
+        this.pedidoDetalles = pedidoDetalles;
+    }
+}
+
+
+Controller
+Cliente 
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.ClienteService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Controlador para la gestión de clientes
+ */
+@RestController
+@RequestMapping("/api/clientes")
+@CrossOrigin(origins = "*")
+public class ClienteController {
+
+    @Autowired
+    private ClienteService clienteService;
+
+    /**
+     * Crea un nuevo cliente validando los datos del request
+     * @param cliente Datos del cliente a crear (validado con @Valid)
+     * @return Cliente creado con status 201
+     */
+    @PostMapping
+    public ResponseEntity<Cliente> crear(@Valid @RequestBody Cliente cliente) {
+        Cliente nuevoCliente = clienteService.crear(cliente);
+        return new ResponseEntity<>(nuevoCliente, HttpStatus.CREATED);
+    }
+
+    /**
+     * Obtiene todos los clientes
+     * @return Lista de clientes
+     */
+    @GetMapping
+    public ResponseEntity<List<Cliente>> obtenerTodos() {
+        List<Cliente> clientes = clienteService.obtenerTodos();
+        return ResponseEntity.ok(clientes);
+    }
+
+    /**
+     * Obtiene un cliente por su ID
+     * @param id Identificador del cliente
+     * @return Cliente encontrado
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Cliente> obtenerPorId(@PathVariable Integer id) {
+        Cliente cliente = clienteService.obtenerPorId(id);
+        return ResponseEntity.ok(cliente);
+    }
+
+    /**
+     * Actualiza un cliente existente validando los datos del request
+     * @param id Identificador del cliente
+     * @param cliente Datos actualizados (validado con @Valid)
+     * @return Cliente actualizado
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Cliente> actualizar(@PathVariable Integer id, @Valid @RequestBody Cliente cliente) {
+        Cliente clienteActualizado = clienteService.actualizar(id, cliente);
+        return ResponseEntity.ok(clienteActualizado);
+    }
+
+    /**
+     * Elimina un cliente por su ID
+     * @param id Identificador del cliente
+     * @return Sin contenido (204)
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        clienteService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Busca clientes por nombre
+     * @param nombre Nombre o parte del nombre a buscar
+     * @return Lista de clientes que coinciden
+     */
+    @GetMapping("/buscar")
+    public ResponseEntity<List<Cliente>> buscarPorNombre(@RequestParam String nombre) {
+        List<Cliente> clientes = clienteService.buscarPorNombre(nombre);
+        return ResponseEntity.ok(clientes);
+    }
+
+    /**
+     * Busca un cliente por su email
+     * @param email Email del cliente
+     * @return Cliente encontrado o 404 si no existe
+     */
+    @GetMapping("/email/{email}")
+    public ResponseEntity<Cliente> buscarPorEmail(@PathVariable String email) {
+        Optional<Cliente> cliente = clienteService.buscarPorEmail(email);
+        return cliente.map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+}
+PedidoController
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.PedidoDetalle;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.PedidoService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Controlador para la gestión de pedidos
+ */
+@RestController
+@RequestMapping("/api/pedidos")
+@CrossOrigin(origins = "*")
+public class PedidoController {
+
+    @Autowired
+    private PedidoService pedidoService;
+
+    /**
+     * Crea un nuevo pedido validando los datos del request
+     * @param pedido Datos del pedido a crear (validado con @Valid)
+     * @return Pedido creado con status 201
+     */
+    @PostMapping
+    public ResponseEntity<Pedido> crear(@Valid @RequestBody Pedido pedido) {
+        Pedido nuevoPedido = pedidoService.crear(pedido);
+        return new ResponseEntity<>(nuevoPedido, HttpStatus.CREATED);
+    }
+
+    /**
+     * Obtiene todos los pedidos
+     * @return Lista de pedidos
+     */
+    @GetMapping
+    public ResponseEntity<List<Pedido>> obtenerTodos() {
+        List<Pedido> pedidos = pedidoService.obtenerTodos();
+        return ResponseEntity.ok(pedidos);
+    }
+
+    /**
+     * Obtiene un pedido por su ID
+     * @param id Identificador del pedido
+     * @return Pedido encontrado
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Pedido> obtenerPorId(@PathVariable Integer id) {
+        Pedido pedido = pedidoService.obtenerPorId(id);
+        return ResponseEntity.ok(pedido);
+    }
+
+    /**
+     * Actualiza un pedido existente validando los datos del request
+     * @param id Identificador del pedido
+     * @param pedido Datos actualizados (validado con @Valid)
+     * @return Pedido actualizado
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Pedido> actualizar(@PathVariable Integer id, @Valid @RequestBody Pedido pedido) {
+        Pedido pedidoActualizado = pedidoService.actualizar(id, pedido);
+        return ResponseEntity.ok(pedidoActualizado);
+    }
+
+    /**
+     * Elimina un pedido por su ID
+     * @param id Identificador del pedido
+     * @return Sin contenido (204)
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        pedidoService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Agrega un detalle a un pedido existente
+     * @param id Identificador del pedido
+     * @param detalle Detalle del producto a agregar (validado con @Valid)
+     * @return Detalle creado con status 201
+     */
+    @PostMapping("/{id}/detalles")
+    public ResponseEntity<PedidoDetalle> agregarDetalle(@PathVariable Integer id, @Valid @RequestBody PedidoDetalle detalle) {
+        PedidoDetalle nuevoDetalle = pedidoService.agregarDetalle(id, detalle);
+        return new ResponseEntity<>(nuevoDetalle, HttpStatus.CREATED);
+    }
+
+    /**
+     * Actualiza el estado de pago de un pedido
+     * @param id Identificador del pedido
+     * @param body Map con el nuevo estado de pago
+     * @return Pedido con estado actualizado
+     */
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<Pedido> actualizarEstado(@PathVariable Integer id, @RequestBody Map<String, String> body) {
+        String nuevoEstado = body.get("estadoPago");
+        Pedido pedidoActualizado = pedidoService.actualizarEstadoPago(id, nuevoEstado);
+        return ResponseEntity.ok(pedidoActualizado);
+    }
+
+    /**
+     * Obtiene todos los pedidos de un cliente específico
+     * @param clienteId Identificador del cliente
+     * @return Lista de pedidos del cliente
+     */
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<List<Pedido>> obtenerPorCliente(@PathVariable Integer clienteId) {
+        List<Pedido> pedidos = pedidoService.obtenerPorCliente(clienteId);
+        return ResponseEntity.ok(pedidos);
+    }
+
+    /**
+     * Obtiene todos los pedidos con estado de pago PENDIENTE
+     * @return Lista de pedidos pendientes
+     */
+    @GetMapping("/pendientes")
+    public ResponseEntity<List<Pedido>> obtenerPendientes() {
+        List<Pedido> pedidos = pedidoService.obtenerPendientes();
+        return ResponseEntity.ok(pedidos);
+    }
+
+    /**
+     * Calcula el total de un pedido (suma de todos sus detalles)
+     * @param id Identificador del pedido
+     * @return Map con el total del pedido
+     */
+    @GetMapping("/{id}/total")
+    public ResponseEntity<Map<String, BigDecimal>> calcularTotal(@PathVariable Integer id) {
+        BigDecimal total = pedidoService.calcularTotal(id);
+        Map<String, BigDecimal> response = new HashMap<>();
+        response.put("total", total);
+        return ResponseEntity.ok(response);
+    }
+}
+GlobalExceptionHandler
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.ResourceNotFoundException;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.BusinessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * Manejador global de excepciones para toda la aplicación
+ * Proporciona respuestas de error consistentes y bien formadas
+ */
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    
+    /**
+     * Maneja errores de validación de @Valid
+     * Cuando las validaciones de Jakarta.validation no se cumplen
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.BAD_REQUEST.value());
+        error.put("error", "Error de validación");
+        
+        // Construir un mapa con los errores de cada campo
+        Map<String, String> fieldErrors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .collect(Collectors.toMap(
+                        field -> field.getField(),
+                        field -> field.getDefaultMessage(),
+                        (existing, replacement) -> existing
+                ));
+        
+        error.put("validationErrors", fieldErrors);
+        error.put("message", "Faltan campos obligatorios o contienen valores inválidos");
+        
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+    
+    /**
+     * Maneja excepciones de recurso no encontrado
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.NOT_FOUND.value());
+        error.put("error", "Recurso no encontrado");
+        error.put("message", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Maneja excepciones de negocio (reglas de validación)
+     */
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.BAD_REQUEST.value());
+        error.put("error", "Error de validación");
+        error.put("message", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Maneja cualquier otra excepción no capturada
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        error.put("error", "Error interno del servidor");
+        error.put("message", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+ProductoController
+
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.ProductoService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+/**
+ * Controlador para la gestión de productos
+ */
+@RestController
+@RequestMapping("/api/productos")
+@CrossOrigin(origins = "*")
+public class ProductoController {
+
+    @Autowired
+    private ProductoService productoService;
+
+    /**
+     * Crea un nuevo producto validando los datos del request
+     * @param producto Datos del producto a crear (validado con @Valid)
+     * @return Producto creado con status 201
+     */
+    @PostMapping
+    public ResponseEntity<Producto> crear(@Valid @RequestBody Producto producto) {
+        Producto nuevoProducto = productoService.crear(producto);
+        return new ResponseEntity<>(nuevoProducto, HttpStatus.CREATED);
+    }
+
+    /**
+     * Obtiene todos los productos
+     * @return Lista de productos
+     */
+    @GetMapping
+    public ResponseEntity<List<Producto>> obtenerTodos() {
+        List<Producto> productos = productoService.obtenerTodos();
+        return ResponseEntity.ok(productos);
+    }
+
+    /**
+     * Obtiene un producto por su ID
+     * @param id Identificador del producto
+     * @return Producto encontrado
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Producto> obtenerPorId(@PathVariable Integer id) {
+        Producto producto = productoService.obtenerPorId(id);
+        return ResponseEntity.ok(producto);
+    }
+
+    /**
+     * Actualiza un producto existente validando los datos del request
+     * @param id Identificador del producto
+     * @param producto Datos actualizados (validado con @Valid)
+     * @return Producto actualizado
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<Producto> actualizar(@PathVariable Integer id, @Valid @RequestBody Producto producto) {
+        Producto productoActualizado = productoService.actualizar(id, producto);
+        return ResponseEntity.ok(productoActualizado);
+    }
+
+    /**
+     * Elimina un producto por su ID
+     * @param id Identificador del producto
+     * @return Sin contenido (204)
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        productoService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Busca productos por nombre
+     * @param nombre Nombre o parte del nombre a buscar
+     * @return Lista de productos que coinciden
+     */
+    @GetMapping("/buscar")
+    public ResponseEntity<List<Producto>> buscarPorNombre(@RequestParam String nombre) {
+        List<Producto> productos = productoService.buscarPorNombre(nombre);
+        return ResponseEntity.ok(productos);
+    }
+
+    /**
+     * Obtiene todos los productos con stock disponible
+     * @return Lista de productos con stock mayor a 0
+     */
+    @GetMapping("/con-stock")
+    public ResponseEntity<List<Producto>> obtenerConStock() {
+        List<Producto> productos = productoService.obtenerConStock();
+        return ResponseEntity.ok(productos);
+    }
+
+    /**
+     * Obtiene productos con stock bajo (menor a 10)
+     * @return Lista de productos con bajo stock
+     */
+    @GetMapping("/bajo-stock")
+    public ResponseEntity<List<Producto>> obtenerConBajoStock() {
+        List<Producto> productos = productoService.obtenerProductosConBajoStock();
+        return ResponseEntity.ok(productos);
+    }
+}
+ThymeleafController
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.controller;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.ClienteService;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.ProductoService;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service.PedidoService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import java.util.List;
+
+@Controller
+@RequestMapping("/thymeleaf")
+public class ThymeleafController {
+
+    @Autowired
+    private ClienteService clienteService;
+
+    @Autowired
+    private ProductoService productoService;
+
+    @Autowired
+    private PedidoService pedidoService;
+
+    @GetMapping
+    public String dashboard(Model model) {
+        List<Cliente> clientes = clienteService.obtenerTodos();
+        List<Producto> productos = productoService.obtenerTodos();
+        List<Pedido> pedidos = pedidoService.obtenerTodos();
+        List<Pedido> pedidosPendientes = pedidoService.obtenerPendientes();
+        List<Producto> productosBajoStock = productoService.obtenerProductosConBajoStock();
+
+        model.addAttribute("clientes", clientes);
+        model.addAttribute("productos", productos);
+        model.addAttribute("pedidos", pedidos);
+        model.addAttribute("pedidosPendientes", pedidosPendientes);
+        model.addAttribute("productosBajoStock", productosBajoStock);
+
+        model.addAttribute("totalClientes", clientes.size());
+        model.addAttribute("totalProductos", productos.size());
+        model.addAttribute("totalPedidos", pedidos.size());
+        model.addAttribute("cantidadPendientes", pedidosPendientes.size());
+
+        return "dashboard";
+    }
+}
+Exception
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception;
+
+public class BusinessException extends RuntimeException {
+    public BusinessException(String message) {
+        super(message);
+    }
+}
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception;
+
+public class ResourceNotFoundException extends RuntimeException {
+    public ResourceNotFoundException(String message) {
+        super(message);
+    }
+}
+
+Repositories
+Cliente repository
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
+    List<Cliente> findByNombreContainingIgnoreCase(String nombre);
+
+    Optional<Cliente> findByEmail(String email);
+
+    Optional<Cliente> findByTelefono(Integer telefono);
+}
+PedidoDetalleRepository
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.PedidoDetalle;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.PedidoDetalleId;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.math.BigDecimal;
+import java.util.List;
+
+public interface PedidoDetalleRepository extends JpaRepository<PedidoDetalle, PedidoDetalleId> {
+    List<PedidoDetalle> findByPedido(Pedido pedido);
+
+    List<PedidoDetalle> findByProducto(Producto producto);
+
+    @Query("SELECT COALESCE(SUM(pd.precioUnitario * pd.cantidad), 0) FROM PedidoDetalle pd WHERE pd.pedido.idPedido = :pedidoId")
+    BigDecimal calcularTotalPedido(@Param("pedidoId") Integer pedidoId);
+}
+PedidoRepository
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface PedidoRepository extends JpaRepository<Pedido, Integer> {
+    List<Pedido> findByCliente(Cliente cliente);
+
+    List<Pedido> findByEstadoPago(String estadoPago);
+
+    List<Pedido> findByFechaBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
+
+    @Query("SELECT p FROM Pedido p WHERE p.estadoPago = 'Pendiente' ORDER BY p.fecha DESC")
+    List<Pedido> findPedidosPendientes();
+
+    @Query("SELECT p FROM Pedido p WHERE p.cliente.idCliente = :clienteId ORDER BY p.fecha DESC")
+    List<Pedido> findPedidosByClienteId(@Param("clienteId") Integer clienteId);
+}
+ProductoRepository
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Repository
+public interface ProductoRepository extends JpaRepository<Producto, Integer> {
+    List<Producto> findByNombreContainingIgnoreCase(String nombre);
+
+    List<Producto> findByStockGreaterThan(Integer stock);
+
+    List<Producto> findByPrecioBetween(BigDecimal precioMin, BigDecimal precioMax);
+
+    @Query("SELECT p FROM Producto p WHERE p.stock < 10")
+    List<Producto> findProductosConBajoStock();
+}
+Service
+ClienteService
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories.ClienteRepository;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.ResourceNotFoundException;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.BusinessException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@Transactional
+public class ClienteService {
+
+    @Autowired
+    private ClienteRepository clienteRepository;
+
+    public List<Cliente> obtenerTodos() {
+        return clienteRepository.findAll();
+    }
+
+    public Cliente obtenerPorId(Integer id) {
+        if (id == null) {
+            throw new BusinessException("El id del cliente no puede ser nulo");
+        }
+        return clienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado con id: " + id));
+    }
+
+    public Cliente crear(Cliente cliente) {
+        Optional<Cliente> existente = clienteRepository.findByEmail(cliente.getEmail());
+        if (existente.isPresent()) {
+            throw new BusinessException("Ya existe un cliente registrado con el email: " + cliente.getEmail());
+        }
+
+        if (cliente.getTelefono() == null) {
+            throw new BusinessException("El teléfono es obligatorio");
+        }
+
+        if (cliente.getNombre() == null || cliente.getNombre().trim().isEmpty()) {
+            throw new BusinessException("El nombre es obligatorio");
+        }
+
+        return clienteRepository.save(cliente);
+    }
+
+    public Cliente actualizar(Integer id, Cliente clienteActualizado) {
+        Cliente clienteExistente = obtenerPorId(id);
+
+        if (!clienteExistente.getEmail().equals(clienteActualizado.getEmail())) {
+            Optional<Cliente> clienteConMismoEmail = clienteRepository.findByEmail(clienteActualizado.getEmail());
+            if (clienteConMismoEmail.isPresent() && !clienteConMismoEmail.get().getIdCliente().equals(id)) {
+                throw new BusinessException("El email ya está registrado por otro cliente");
+            }
+        }
+
+        clienteExistente.setNombre(clienteActualizado.getNombre());
+        clienteExistente.setEmail(clienteActualizado.getEmail());
+        clienteExistente.setTelefono(clienteActualizado.getTelefono());
+
+        return clienteRepository.save(clienteExistente);
+    }
+
+    public void eliminar(Integer id) {
+        Cliente cliente = obtenerPorId(id);
+        if (cliente != null) {
+            clienteRepository.delete(cliente);
+        }
+    }
+
+    public List<Cliente> buscarPorNombre(String nombre) {
+        return clienteRepository.findByNombreContainingIgnoreCase(nombre);
+    }
+
+    public Optional<Cliente> buscarPorEmail(String email) {
+        return clienteRepository.findByEmail(email);
+    }
+}
+PedidoService
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Pedido;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.PedidoDetalle;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Cliente;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories.PedidoDetalleRepository;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories.PedidoRepository;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.ResourceNotFoundException;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.BusinessException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@Transactional
+public class PedidoService {
+
+    @Autowired
+    private PedidoRepository pedidoRepository;
+
+    @Autowired
+    private PedidoDetalleRepository pedidoDetalleRepository;
+
+    @Autowired
+    private ProductoService productoService;
+
+    @Autowired
+    private ClienteService clienteService;
+
+    public List<Pedido> obtenerTodos() {
+        return pedidoRepository.findAll();
+    }
+
+    public Pedido obtenerPorId(Integer id) {
+        if (id == null) {
+            throw new BusinessException("El id del pedido no puede ser nulo");
+        }
+        return pedidoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con id: " + id));
+    }
+
+    public Pedido crear(Pedido pedido) {
+        if (pedido.getCliente() == null || pedido.getCliente().getIdCliente() == null) {
+            throw new BusinessException("Debe especificar un cliente para el pedido");
+        }
+
+        Cliente cliente = clienteService.obtenerPorId(pedido.getCliente().getIdCliente());
+        pedido.setCliente(cliente);
+
+        if (pedido.getFecha() == null) {
+            pedido.setFecha(LocalDateTime.now());
+        }
+
+        if (pedido.getEstadoPago() == null || pedido.getEstadoPago().trim().isEmpty()) {
+            pedido.setEstadoPago("Pendiente");
+        }
+
+        if (pedido.getDireccionEnvio() == null || pedido.getDireccionEnvio().trim().isEmpty()) {
+            throw new BusinessException("La dirección de envío es obligatoria");
+        }
+
+        Pedido pedidoGuardado = pedidoRepository.save(pedido);
+
+        if (pedido.getDetalles() != null && !pedido.getDetalles().isEmpty()) {
+            for (PedidoDetalle detalle : pedido.getDetalles()) {
+                agregarDetalle(pedidoGuardado.getIdPedido(), detalle);
+            }
+        }
+
+        return obtenerPorId(pedidoGuardado.getIdPedido());
+    }
+
+    public PedidoDetalle agregarDetalle(Integer pedidoId, PedidoDetalle detalle) {
+        Pedido pedido = obtenerPorId(pedidoId);
+
+        if (detalle.getProducto() == null || detalle.getProducto().getIdProducto() == null) {
+            throw new BusinessException("Debe especificar un producto válido");
+        }
+
+        Producto producto = productoService.obtenerPorId(detalle.getProducto().getIdProducto());
+
+        if (!productoService.verificarDisponibilidad(producto.getIdProducto(), detalle.getCantidad())) {
+            throw new BusinessException("Stock insuficiente para el producto: " + producto.getNombre());
+        }
+
+        if (detalle.getPrecioUnitario() == null) {
+            detalle.setPrecioUnitario(producto.getPrecio());
+        }
+
+        detalle.setPedido(pedido);
+        detalle.setProducto(producto);
+
+        productoService.reducirStock(producto.getIdProducto(), detalle.getCantidad());
+
+        return pedidoDetalleRepository.save(detalle);
+    }
+
+    public Pedido actualizarEstadoPago(Integer id, String nuevoEstado) {
+        Pedido pedido = obtenerPorId(id);
+
+        List<String> estadosPermitidos = List.of("Pendiente", "Pagado", "Cancelado");
+        if (!estadosPermitidos.contains(nuevoEstado)) {
+            throw new BusinessException("Estado de pago no válido. Valores permitidos: " + estadosPermitidos);
+        }
+
+        pedido.setEstadoPago(nuevoEstado);
+        return pedidoRepository.save(pedido);
+    }
+
+    public Pedido actualizar(Integer id, Pedido pedidoActualizado) {
+        Pedido pedidoExistente = obtenerPorId(id);
+
+        pedidoExistente.setDireccionEnvio(pedidoActualizado.getDireccionEnvio());
+        pedidoExistente.setEstadoPago(pedidoActualizado.getEstadoPago());
+
+        return pedidoRepository.save(pedidoExistente);
+    }
+
+    public void eliminar(Integer id) {
+        Pedido pedido = obtenerPorId(id);
+        if (pedido != null) {
+            pedidoRepository.delete(pedido);
+        }
+    }
+
+    public List<Pedido> obtenerPorCliente(Integer clienteId) {
+        return pedidoRepository.findPedidosByClienteId(clienteId);
+    }
+
+    public List<Pedido> obtenerPorEstado(String estado) {
+        return pedidoRepository.findByEstadoPago(estado);
+    }
+
+    public List<Pedido> obtenerPendientes() {
+        return pedidoRepository.findPedidosPendientes();
+    }
+
+    public BigDecimal calcularTotal(Integer pedidoId) {
+        BigDecimal total = pedidoDetalleRepository.calcularTotalPedido(pedidoId);
+        return total != null ? total : BigDecimal.ZERO;
+    }
+}
+ProductoService
+package ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.service;
+
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.model.Producto;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.repositories.ProductoRepository;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.ResourceNotFoundException;
+import ar.edu.centro8.daw.trabajo_integrador_gilma_aguada.exception.BusinessException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Service
+@Transactional
+public class ProductoService {
+
+    @Autowired
+    private ProductoRepository productoRepository;
+
+    public List<Producto> obtenerTodos() {
+        return productoRepository.findAll();
+    }
+
+    @SuppressWarnings("null")
+    public Producto obtenerPorId(Integer id) {
+        return productoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
+    }
+
+    @SuppressWarnings("null")
+    public Producto crear(Producto producto) {
+        validarProducto(producto);
+        return productoRepository.save(producto);
+    }
+
+    public Producto actualizar(Integer id, Producto productoActualizado) {
+        Producto productoExistente = obtenerPorId(id);
+        validarProducto(productoActualizado);
+
+        productoExistente.setNombre(productoActualizado.getNombre());
+        productoExistente.setPrecio(productoActualizado.getPrecio());
+        productoExistente.setStock(productoActualizado.getStock());
+
+        return productoRepository.save(productoExistente);
+    }
+
+    private void validarProducto(Producto producto) {
+        if (producto.getPrecio() == null || producto.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("El precio debe ser mayor a 0");
+        }
+        if (producto.getStock() == null || producto.getStock() < 0) {
+            throw new BusinessException("El stock no puede ser negativo");
+        }
+        if (producto.getNombre() == null || producto.getNombre().trim().isEmpty()) {
+            throw new BusinessException("El nombre del producto es obligatorio");
+        }
+    }
+
+    public boolean verificarDisponibilidad(Integer productoId, Integer cantidadSolicitada) {
+        Producto producto = obtenerPorId(productoId);
+        return producto.getStock() >= cantidadSolicitada;
+    }
+
+    public void reducirStock(Integer productoId, Integer cantidad) {
+        Producto producto = obtenerPorId(productoId);
+
+        if (producto.getStock() < cantidad) {
+            throw new BusinessException("Stock insuficiente para el producto: " + producto.getNombre());
+        }
+
+        producto.setStock(producto.getStock() - cantidad);
+        productoRepository.save(producto);
+    }
+
+    @SuppressWarnings("null")
+    public void eliminar(Integer id) {
+        Producto producto = obtenerPorId(id);
+        productoRepository.delete(producto);
+    }
+
+    public List<Producto> buscarPorNombre(String nombre) {
+        return productoRepository.findByNombreContainingIgnoreCase(nombre);
+    }
+
+    public List<Producto> obtenerConStock() {
+        return productoRepository.findByStockGreaterThan(0);
+    }
+
+    public List<Producto> obtenerProductosConBajoStock() {
+        return productoRepository.findProductosConBajoStock();
+    }
+}
+pom.xml Viejo
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Spring Boot con Maven -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>ar.edu.centro8.daw</groupId>
+    <artifactId>trabajo-integrador-gilma-aguada</artifactId>
+    <version>1.0.0</version>
+    <name>Trabajo Integrador - Casa de Reparación</name>
+    <description>Sistema de gestión para casa de reparación de electrodomésticos</description>
+
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+    <dependencies>
+
+        <!-- Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Thymeleaf -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <!-- MySQL -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+        </dependency>
+
+        <!-- Validación -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- DevTools -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Necesario para empaquetar y ejecutar el .jar -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
